@@ -26,20 +26,20 @@ A dynamic weather dashboard built with Django, OpenWeatherMap, and Unsplash APIs
    ```bash
    git clone https://github.com/your-username/weatherapp.git
    cd weatherapp
-2. Create a virtual environment
+2. Create a virtual environment: 
     python -m venv venv
     source venv/bin/activate  # or venv\Scripts\activate on Windows
 
-3. Install dependencies
+3. Install dependencies: 
     pip install -r requirements.txt
 
-4. Add your .env file
+4. Add your .env file: 
     OPENWEATHER_API_KEY=your_openweather_api_key
     UNSPLASH_API_KEY=your_unsplash_api_key
-5 Run the server
+5. Run the server: 
     python manage.py runserver
 
-6 Visit
+6. Visit: 
     http://127.0.0.1:8000/
 
 📁 Project Structure

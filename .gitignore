@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+*.log
+
+# Virtual environments
+venv/
+env/
+ENV/
+*.env
+*.env.*
+
+# Django
+db.sqlite3
+*.sqlite3
+*.db
+*.migrations/
+local_settings.py
+
+# Static & media files
+/staticfiles/
+/media/
+/static_root/
+/media_root/
+
+# VS Code
+.vscode/
+
+# OS-specific
+.DS_Store
+Thumbs.db

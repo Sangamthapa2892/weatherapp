@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+{% load static %}
+{% load tz %}
+
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Forecast App</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- favicon css -->
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'favicon/apple-touch-icon.png' %}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'favicon/favicon-32x32.png' %}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'favicon/favicon-16x16.png' %}">
+    <link rel="manifest" href="{% static 'favicon/site.webmanifest' %}">
+    <link rel="shortcut icon" href="{% static 'favicon/favicon.ico' %}">
+
+    <!-- css -->
+    <link rel="stylesheet" href="{% static 'css/index.css' %}">
+
+</head>
+
+<body>
+    <div class="app-container">
+        <div class="header-container">
+            <h1><i class="fas fa-cloud-sun"></i> Weather Forecast</h1>
+            <p>Check the weather in cities around the world</p>
+        </div>
+
+        <div class="search-container">
+            <form action="" method="post">
+                {% csrf_token %}
+                <input type="text" id="search-input" name="city" placeholder="Search for a city...">
+                <button id="search-btn"><i class="fas fa-search"></i> Search</button>
+            </form>
+        </div>
+
+        <div class="main-content-container">
+            <div class="current-weather-container">
+                {% if error %}
+                <div class="city-card weather-info">
+                    <div class="data">
+                        <h2>Current Weather in <span id="current-city">"{{city}}"</span></h2>
+                        <div class="current-temp">{% if temp %}
+                            {{temp}}
+                            {% else %}
+                            n/a
+                            {% endif %}&deg;C</div>
+                        <div class="weather-condition">
+                            {% if icon %}
+                            <img src="https://openweathermap.org/img/wn/{{ icon }}@2x.png" alt="Weather icon">
+                            {% else %}
+                            n/a
+                            {% endif %}
+                            <p style="color: red;">Oops! {{ error }}</p>
+                        </div>
+                    </div>
+                    <div class="img">
+                        {% if image %}
+                        <img src="{{ image }}" alt="Unsplash image" class="city-image"
+                            style="max-width: 100%; height: 500px;">
+                        {% else %}
+                        <p>No image found for "{{city}}".</p>
+                        {% endif %}
+                    </div>
+                </div>
+                {% else %}
+                <div class="city-card weather-info">
+                    <div class="data">
+                        <h2>Current Weather in <span id="current-city">{{city}}</span></h2>
+                        <div class="current-temp">{{temp}}&deg;C</div>
+                        <div class="weather-condition">
+                            <img src="https://openweathermap.org/img/wn/{{ icon }}@2x.png" alt="Weather icon">
+                            <p>{{desc}}</p>
+                        </div>
+                    </div>
+                    <div class="img">
+                        {% if image %}
+                        <img src="{{ image }}" alt="Unsplash image" class="city-image"
+                            style="max-width: 100%; height: 500px;">
+                        {% else %}
+                        <p>No image found for "{{ query }}".</p>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+                <div>
+                    <div class="weather-details">
+                        <div class="detail">
+                            <i class="fas fa-tint"></i>
+                            <p>Humidity</p>
+                            <p>{{humidity}}%</p>
+                        </div>
+                        <div class="detail">
+                            <i class="fas fa-wind"></i>
+                            <p>Wind Speed</p>
+                            <p>{{wind}}km/h</p>
+                        </div>
+                        <div class="detail">
+                            <i class="fas fa-compress-arrows-alt"></i>
+                            <p>Pressure</p>
+                            <p>{{pressure}} hPa</p>
+                        </div>
+                        <div class="detail">
+                            <i class="fas fa-eye"></i>
+                            <p>Visibility</p>
+                            <p>{{visibility}} km</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="forecast-container">
+                <h2>5-Day Forecast</h2>
+                <div class="forecast-days">
+                    {% for forecast in forecasts %}
+                    <div class="forecast-day">
+                        <div>{{ forecast.day }}</div>
+                        <img src="https://openweathermap.org/img/wn/{{ forecast.icon }}@2x.png" alt="icon">
+                        <div>{{ forecast.max_temp }}&deg;C / {{ forecast.min_temp }}&deg;C</div>
+                    </div>
+                    {% empty %}
+                    <p style="color: red;">Oops! {{ error }}</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="cities-container">
+                <h2>Popular Cities</h2>
+                <div class="cities-grid">
+                    {% for city in popular_cities %}
+                    <div class="city-card">
+                        <img src="{{ city.image }}" alt="{{ city.city }}" class="city-image">
+                        <div class="city-info">
+                            <h3 class="city-name">{{ city.city }}</h3>
+                            <div class="city-temp">{{ city.temp }}°C</div>
+                            <div class="city-weather">{{ city.desc }}</div>
+                            <img src="http://openweathermap.org/img/wn/{{ city.icon }}@2x.png" alt="Weather icon">
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>     
+        <div class="footer-container">
+            <p>Weather App &copy; {% now "Y" %} | Created By : Sangam Thapa <i class="fas fa-heart" style="color: #e74c3c;"></i></p>
+        </div>
+    </div>
+    {{ popular_cities|json_script:"popular-cities-data" }}
+    <script>
+        // DOM Elements
+        const searchInput = document.getElementById('search-input');
+        const searchBtn = document.getElementById('search-btn');
+        const citiesGrid = document.querySelector('.cities-grid');
+
+        // Get cities from Django context (assumes it's injected as JSON)
+        const cities = JSON.parse(document.getElementById('popular-cities-data').textContent.trim());
+
+        // Initialize the app
+        function initApp() {
+            displayCities(cities);
+
+            searchBtn.addEventListener('click', handleSearch);
+            searchInput.addEventListener('keyup', (e) => {
+                if (e.key === 'Enter') handleSearch();
+            });
+        }
+
+        // Display city cards
+        function displayCities(cityList) {
+            citiesGrid.innerHTML = '';
+
+            cityList.forEach(city => {
+                const card = document.createElement('div');
+                card.className = 'city-card';
+                card.innerHTML = `
+                    <img src="${city.image}" alt="${city.city}" class="city-image">
+                    <div class="city-info">
+                        <h3 class="city-name">${city.city}</h3>
+                        <div class="city-temp">${city.temp}°C</div>
+                        <div class="city-weather">${city.desc}</div>
+                        <img src="http://openweathermap.org/img/wn/${city.icon}@2x.png" alt="Weather icon">
+                    </div>
+                `;
+                card.addEventListener('click', () => updateCurrentWeather(city.city));
+                citiesGrid.appendChild(card);
+            });
+        }
+
+        // Search functionality
+        function handleSearch() {
+            const searchTerm = searchInput.value.trim().toLowerCase();
+
+            if (searchTerm) {
+                const filtered = cities.filter(city =>
+                    city.city.toLowerCase().includes(searchTerm)
+                );
+
+                if (filtered.length > 0) {
+                    displayCities(filtered);
+                    updateCurrentWeather(filtered[0].city);
+                } else {
+                    citiesGrid.innerHTML = '<p class="no-results">No cities found. Try another search.</p>';
+                }
+            } else {
+                displayCities(cities);
+            }
+        }
+
+        // Dummy function for updating weather (you can hook this to Django or AJAX)
+        function updateCurrentWeather(cityName) {
+            console.log("Update weather for:", cityName);
+            // You could trigger a form submission or AJAX call here
+        }
+
+        window.addEventListener('load', initApp);
+    </script>
+
+</body>
+
+</html>

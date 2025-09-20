@@ -68,5 +68,3 @@ Backend Developer | Django Enthusiast | DevOps Learner
 
 
 
-- 
-
